@@ -5,44 +5,21 @@ using System.Security.Policy;
 
 namespace Semestralni_prace
 {
-
-    public partial class FormSetup : Form
+    
+    public partial class Semestralni_Prace : Form
     {
         private List<PictureBox> pics = new List<PictureBox>();
-        public FormSetup()
+        public Semestralni_Prace()
         {
             InitializeComponent();
         }
-        public class Tile
+        
+
+        private void show(Tile[,] field)
         {
-            public Image tiletype;
-            public bool[] adj;
-
-            public Tile(bool[] adj, Image tiletype)
-            {
-                this.tiletype = tiletype;
-                this.adj = adj;
-            }
-
-            public Tile[,] add(Tile[,] bloky, int blok)
-            {
-                int l = bloky.GetLength(0);
-                bloky[(blok - 1) / l, (blok - 1) % l] = this;
-                return bloky;
-            }
-            public Tile[,] remove(Tile[,] bloky, int blok)
-            {
-                int l = bloky.GetLength(0);
-                bloky[(blok - 1) / l, (blok - 1) % l] = null;
-                return bloky;
-            }
-
-        }
-
-        private void show(int worldsize, Tile[,] world)
-        {
+            int worldsize = field.GetLength(0);
             const int size = 80;
-            int off = Generate_Button.Size.Height;
+            int offset = Generate_Button.Size.Height;
 
             for (int i = 0; i < worldsize; i++)
             {
@@ -51,8 +28,8 @@ namespace Semestralni_prace
                     PictureBox pictureBox = new PictureBox
                     {
                         Size = new Size(size, size),
-                        Location = new Point(20 + j * size, off + 20 + i * size),
-                        Image = world[i, j].tiletype
+                        Location = new Point(20 + j * size, offset + 20 + i * size),
+                        Image = field[i, j].tiletype
                     };
                     pics.Add(pictureBox);
                     Controls.Add(pictureBox);
@@ -73,17 +50,10 @@ namespace Semestralni_prace
             return tiles;
         }
 
-        private Tile[] getTiles()
+        
+        private bool check(Tile[,] field, int blok, Tile t)
         {
-            Tile x = new Tile(new[] { true, true, true, true }, Resources.X);
-            Tile stub = new Tile(new[] { false, true, false, false }, Resources.Stub);
-            Tile turn1 = new Tile(new[] { true, true, false, false }, Resources.Turn1);
-            Tile turn2 = new Tile(new[] { true, false, false, true }, Resources.Turn2);
-            Tile turn3 = new Tile(new[] { false, false, true, true }, Resources.Turn3);
-            return new[] { x, stub, turn1, turn2, turn3 };
-        }
-        private bool check(Tile[,] field, int blok, Tile t, int size)
-        {
+            int size = field.GetLength(0);
             int row = (blok - 1) / size;
             int col = (blok - 1) % size;
             int rows, cols;
@@ -114,23 +84,25 @@ namespace Semestralni_prace
             }
             return true;
         }
-        private Tile[,] generator(Tile[,] field, Tile[] opts, int size, int blok)
+        private Tile[,] generator(Tile[,] field, Tile[] opts, int blok)
         {
+            int size = field.GetLength(0);
             if (blok < size * size + 1)
             {
                 Tile[] shuffeled = opts;
                 Random.Shared.Shuffle(shuffeled);
                 foreach (Tile i in shuffeled)
                 {
-                    if (check(field, blok, i, size))
+                    if (check(field, blok, i))
                     {
                         field = i.add(field, blok);
                         blok++;
-                        Tile[,] temp = generator(field, opts, size, blok);
+                        Tile[,] temp = generator(field, opts, blok);
                         if (temp != null)
                         {
                             return temp;
                         }
+                        i.remove(field, blok);
                         blok--;
                     }
                 }
@@ -143,19 +115,18 @@ namespace Semestralni_prace
             foreach (PictureBox c in pics)
             {
                 c.Dispose();
-                
             }
             pics.Clear();
         }
         private void Generate_Button_Click(object sender, EventArgs e)
         {
+            
             closeAll();
-            Tile[] options = getTiles();
+            Tile[] options = Tile.getTiles();
             int size = 10;
             Tile[,] field = getField(size);
-            field = generator(field, options, size, 1);
-            show(size, field);
+            field = generator(field, options, 1);
+            show(field);
         }
-
     }
 }

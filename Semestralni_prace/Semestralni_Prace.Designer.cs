@@ -1,6 +1,6 @@
 ﻿namespace Semestralni_prace
 {
-    partial class FormSetup
+    partial class Semestralni_Prace
     {
         /// <summary>
         ///  Required designer variable.
